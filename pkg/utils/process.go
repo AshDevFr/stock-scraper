@@ -3,9 +3,9 @@ package utils
 import (
 	"fmt"
 	"github.com/sergi/go-diff/diffmatchpatch"
+	log "github.com/sirupsen/logrus"
 	"regexp"
 	"stock_scraper/types"
-	log "github.com/sirupsen/logrus"
 	"strings"
 )
 
@@ -29,14 +29,14 @@ func diff(previousContent string, newContent string) ([]string, []string) {
 func applyRule(rule types.Rule, text string) *types.Action {
 	switch rule.Strategy {
 	case "has":
-		if  strings.Contains(
+		if strings.Contains(
 			strings.ToLower(text),
 			strings.ToLower(rule.Text),
 		) {
 			return &types.Action{Type: "found", Content: text}
 		}
 	case "match":
-		r, err := regexp.Compile(rule.Text)
+		r, err := regexp.Compile("(?i)" + rule.Text)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": fmt.Sprintf("%s", err),

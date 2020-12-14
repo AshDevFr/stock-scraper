@@ -2,7 +2,7 @@ package types
 
 type Rule struct {
 	Condition string `json:"condition"` // text, added, removed
-	Strategy  string `json:"strategy"`      // has, match
+	Strategy  string `json:"strategy"`  // has, match
 	Text      string `json:"text"`
 }
 

@@ -1,18 +1,37 @@
 {
-	"items": [
-		{
-			"id": "N1234567890",
-			"type": "newegg"
-		},
-		{
-			"id": "https://www.newegg.com/p/N82E16868110292?Description=ps5&cm_re=ps5-_-68-110-292-_-Product"
-		},
-		{
-			"id": "https://www.newegg.com/p/N82E16868110292?Description=ps5&cm_re=ps5-_-68-110-292-_-Product",
-			"selectors": [
-				"#ProductBuy",
-				"div.product-buy-box > div.product-pane > div.product-price > ul > li.price-current"
-			]
-		}
-	]
+  "rules": [
+    {
+      "condition": "added",
+      "strategy": "has",
+      "text": "cart"
+    },
+    {
+      "condition": "text",
+      "strategy": "match",
+      "text": "(cart|detail)"
+    }
+  ],
+  "items": [
+    {
+      "id": "N1234567890",
+      "type": "newegg",
+      "rules": [
+        {
+          "condition": "added",
+          "strategy": "has",
+          "text": "cart"
+        }
+      ]
+    },
+    {
+      "id": "https://www.newegg.com/p/N82E16868110292?Description=ps5&cm_re=ps5-_-68-110-292-_-Product"
+    },
+    {
+      "id": "https://www.newegg.com/p/N82E16868110292?Description=ps5&cm_re=ps5-_-68-110-292-_-Product",
+      "selectors": [
+        "#ProductBuy",
+        "div.product-buy-box > div.product-pane > div.product-price > ul > li.price-current"
+      ]
+    }
+  ]
 }

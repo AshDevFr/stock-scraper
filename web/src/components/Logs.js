@@ -3,11 +3,12 @@ import "./Logs.scss";
 import Messages from "./Logs/Messages";
 
 const Logs = ({logs}) => {
-  const messages = logs.map(log =>{
+  const messages = logs.map(log => {
     try {
       const data = JSON.parse(log.data)
       return data
-    } catch {}
+    } catch {
+    }
     return null
   })
   return (

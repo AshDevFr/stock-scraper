@@ -12,6 +12,6 @@ type WSUpdatePayload struct {
 type WSActionPayload struct {
 	Type    string `json:"type"`
 	Action  string `json:"action"`
-	Item         Item   `json:"item"`
+	Item    Item   `json:"item"`
 	Content string `json:"content"`
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 import './App.css';
 import Header from "./components/Header.js";
 import Logs from "./components/Logs";

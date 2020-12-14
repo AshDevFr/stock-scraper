@@ -58,7 +58,7 @@ func runScrapers() {
 				websocket.SendUpdateMessage(scraperType, item, "error", err)
 			} else {
 				websocket.SendUpdateMessage(scraperType, item, "ok", content)
-				rules:= config.Rules
+				rules := config.Rules
 				if item.Rules != nil {
 					rules = item.Rules
 				}
