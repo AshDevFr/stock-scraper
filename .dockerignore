@@ -1,0 +1,4 @@
+/docker/prod/Dockerfile
+/web/node_modules
+/web/build
+config.json
