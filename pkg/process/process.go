@@ -1,4 +1,4 @@
-package utils
+package process
 
 import (
 	"fmt"
@@ -50,8 +50,12 @@ func applyRule(rule types.Rule, text string) *types.Action {
 	return nil
 }
 
-func ApplyRules(rules []types.Rule, previousContent string, newContent string) []types.Action {
-	addedTexts, removedTexts := diff(previousContent, newContent)
+func ApplyRules(rules []types.Rule, previousContent *string, newContent string) []types.Action {
+	if previousContent == nil {
+		return []types.Action{}
+	}
+
+	addedTexts, removedTexts := diff(*previousContent, newContent)
 	addedText := strings.Join(addedTexts, "")
 	removedText := strings.Join(removedTexts, "")
 	var actions []types.Action
@@ -59,6 +63,10 @@ func ApplyRules(rules []types.Rule, previousContent string, newContent string) [
 	for _, rule := range rules {
 		var action *types.Action
 		switch rule.Condition {
+		case "changed":
+			if *previousContent != newContent {
+				action = &types.Action{Type: "found", Content: newContent}
+			}
 		case "added":
 			action = applyRule(rule, addedText)
 		case "removed":

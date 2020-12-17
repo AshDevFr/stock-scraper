@@ -1,9 +1,19 @@
 package types
 
+type ItemConfig struct {
+	Cron      string            `json:"cron"`
+	Headers   map[string]string `json:"headers"`
+	Rules     []Rule            `json:"rules"`
+	Selectors []string          `json:"selectors"`
+	UserAgent string            `json:"userAgent"`
+	OpenLinks *bool              `json:"openLinks"`
+}
+
 type Rule struct {
-	Condition string `json:"condition"` // text, added, removed
-	Strategy  string `json:"strategy"`  // has, match
-	Text      string `json:"text"`
+	Condition string   `json:"condition"` // text, added, removed, changed
+	Strategy  string   `json:"strategy"`  // has, match
+	Text      string   `json:"text"`
+	Actions   []string `json:"actions"` // notify, open
 }
 
 type Action struct {
@@ -11,16 +21,26 @@ type Action struct {
 	Content string `json:"content"`
 }
 
+type Parser interface {
+	Label() string
+	Parse(ItemConfig, Item) Item
+	Run(Item) (string, string)
+}
+
 type Item struct {
-	Id        string   `json:"id"`
-	Url       string   `json:"url"`
-	Type      string   `json:"type"`
-	Selectors []string `json:"selectors"`
-	UserAgent string   `json:"userAgent"`
-	Rules     []Rule   `json:"rules"`
+	Id           string     `json:"id"`
+	Uuid         string     `json:"uuid"`
+	Title        string     `json:"title"`
+	Url          string     `json:"url"`
+	TrackedUrl   string     `json:"trackedUrl"`
+	AddToCartUrl string     `json:"addToCartUrl"`
+	Type         string     `json:"type"`
+	Config       ItemConfig `json:"config"`
+	Parser       Parser
 }
 
 type Config struct {
-	Items []Item `json:"items"`
-	Rules []Rule `json:"rules"`
+	Items         []Item     `json:"items"`
+	DefaultConfig ItemConfig `json:"defaultConfig"`
+	ItemMap       map[string]*Item
 }

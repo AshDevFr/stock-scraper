@@ -2,7 +2,7 @@ package websocket
 
 import (
 	"bytes"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"time"
 

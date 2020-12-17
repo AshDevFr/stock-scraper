@@ -28,6 +28,7 @@ RUN go mod download
 
 COPY pkg /app/pkg
 COPY types /app/types
+COPY internal /app/internal
 COPY main.go /app/
 RUN go build -o stock_scraper .
 

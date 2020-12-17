@@ -7,27 +7,62 @@ import (
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"regexp"
-	"stock_scraper/pkg/scrapers"
-	"stock_scraper/pkg/utils"
+	"stock_scraper/pkg/browser"
+	config2 "stock_scraper/pkg/config"
+	"stock_scraper/pkg/process"
+	"stock_scraper/pkg/state"
 	"stock_scraper/pkg/websocket"
 	"stock_scraper/types"
 	"sync"
+	"time"
 )
 
 var (
-	config       types.Config
-	neweggRegex  = regexp.MustCompile(`(?i)newegg\.com`)
-	bestbuyRegex = regexp.MustCompile(`(?i)bestbuy\.com`)
-	amazonRegex  = regexp.MustCompile(`(?i)amazon\.com`)
+	config types.Config
 )
 
 func init() {
-	config = utils.LoadConfig("./config.json")
+	http.DefaultClient.Timeout = time.Second * 120
+	config = config2.LoadConfig("./config.json")
+	config2.LoadUserAgents("./user_agents.txt")
 }
 
-func runScrapers() {
-	log.Println("Starting inventory search...")
+func runScraper(item types.Item) {
+	scraperType := item.Parser.Label()
+	content, err := item.Parser.Run(item)
+
+	if err != "" {
+		websocket.SendUpdateMessage(scraperType, item, "error", err)
+	} else {
+		websocket.SendUpdateMessage(scraperType, item, "ok", content)
+		rules := config.DefaultConfig.Rules
+		if item.Config.Rules != nil {
+			rules = item.Config.Rules
+		}
+		previousContent := state.GetContent(item.Uuid)
+		actions := process.ApplyRules(rules, previousContent, content)
+		state.SetContent(item.Uuid, content)
+
+		if len(actions) > 0 {
+			if *item.Config.OpenLinks && item.Url != "" {
+				state.ShouldRunAlert(item.Uuid, func() {
+					if item.AddToCartUrl != "" {
+						browser.Open(item.AddToCartUrl)
+					} else {
+						browser.Open(item.Url)
+					}
+				})
+				log.Info("Opening link")
+			}
+			for _, action := range actions {
+				websocket.SendActionMessage(action, item)
+			}
+		}
+	}
+}
+
+func runAllScrapers() {
+	log.Debug("Running the scrapers: start")
 	// loop for items in config to build and execute http requests
 
 	var waitGroup sync.WaitGroup
@@ -36,47 +71,25 @@ func runScrapers() {
 		waitGroup.Add(1)
 		go func(item types.Item) {
 			defer waitGroup.Done()
-			scraperType := ""
-			content := ""
-			err := ""
-			switch {
-			case item.Type == "newegg" || neweggRegex.MatchString(item.Url):
-				scraperType = "newegg"
-				content, err = scrapers.RunNewegg(item)
-			case item.Type == "bestbuy" || bestbuyRegex.MatchString(item.Url):
-				scraperType = "bestbuy"
-				content, err = scrapers.RunBestBuy(item)
-			case item.Type == "amazon" || amazonRegex.MatchString(item.Url):
-				scraperType = "amazon"
-				content, err = scrapers.RunAmazon(item)
-			default:
-				scraperType = "default"
-				content, err = scrapers.RunDefault(item)
-			}
-
-			if err != "" {
-				websocket.SendUpdateMessage(scraperType, item, "error", err)
-			} else {
-				websocket.SendUpdateMessage(scraperType, item, "ok", content)
-				rules := config.Rules
-				if item.Rules != nil {
-					rules = item.Rules
-				}
-				actions := utils.ApplyRules(rules, "", content)
-				for _, action := range actions {
-					websocket.SendActionMessage(action, item)
-				}
-			}
+			runScraper(item)
 		}(item)
 	}
 	waitGroup.Wait()
-	log.Println("Complete.")
+	log.Debug("Running the scrapers: done")
 }
 
 func setupCron() {
+	log.Debug("Setting up the cron jobs: start")
 	c := cron.New(cron.WithSeconds())
-	c.AddFunc("*/20 * * * * *", func() { runScrapers() })
+
+	for _, item := range config.Items {
+		it := item
+		c.AddFunc(item.Config.Cron, func() {
+			runScraper(it)
+		})
+	}
 	c.Start()
+	log.Debug("Setting up the cron jobs: done")
 }
 
 func setupRouter() (*gin.Engine, *websocket.Hub) {
@@ -107,16 +120,33 @@ func setupRouter() (*gin.Engine, *websocket.Hub) {
 }
 
 func main() {
-	serverEnabled := flag.Bool("s", false, "Enable the server")
+	serverOpt := flag.Bool("s", false, "Enable the server")
+	verboseOpt := flag.Bool("v", false, "Verbose")
+	watchOpt := flag.Bool("w", false, "Watch for changes (Not required if the server is enabled)")
+
 	flag.Parse()
 
-	if *serverEnabled {
+	if *verboseOpt {
+		log.SetLevel(log.DebugLevel)
+		log.Info("Mode verbose enabled")
+	}
+
+	if *serverOpt {
+		log.Info("Web server enabled")
 		setupCron()
 
 		router, _ := setupRouter()
 
 		router.Run(":5000")
 	} else {
-		runScrapers()
+		if *watchOpt {
+			setupCron()
+
+			for {
+				time.Sleep(10 * time.Second)
+			}
+		} else {
+			runAllScrapers()
+		}
 	}
 }

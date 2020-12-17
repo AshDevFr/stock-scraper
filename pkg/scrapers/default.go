@@ -1,19 +1,18 @@
 package scrapers
 
 import (
+	"compress/gzip"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"net/http"
 	"stock_scraper/types"
+	"time"
 )
 
-func RunDefault(item types.Item) (string, string) {
-	return Run(item, []string{"body"}, make(map[string]string))
-}
-
-func Run(item types.Item, defaultSelectors []string, extraHeaders map[string]string) (string, string) {
-	itemUrl := item.Url
+func Run(item types.Item, checkContent func(string) error) (string, string) {
+	itemUrl := item.TrackedUrl
 	if itemUrl == "" {
 		log.WithFields(log.Fields{
 			"item": item,
@@ -21,20 +20,20 @@ func Run(item types.Item, defaultSelectors []string, extraHeaders map[string]str
 		return "", "No url provided"
 	}
 
-	selectors := defaultSelectors
-
-	if len(item.Selectors) > 0 {
-		selectors = item.Selectors
+	tr := &http.Transport{
+		MaxIdleConns:       10,
+		IdleConnTimeout:    30 * time.Second,
+		DisableCompression: false,
 	}
-
-	client := &http.Client{}
+	client := &http.Client{Transport: tr}
+	//client := &http.Client{}
 
 	logger := log.WithFields(log.Fields{
 		"url":       itemUrl,
-		"selectors": selectors,
+		"selectors": item.Config.Selectors,
 	})
 
-	logger.Info("Fetching")
+	logger.Debug("Fetching")
 
 	req, err := http.NewRequest("GET", itemUrl, nil)
 	if err != nil {
@@ -42,15 +41,11 @@ func Run(item types.Item, defaultSelectors []string, extraHeaders map[string]str
 		return "", fmt.Sprintf("%s", err)
 	}
 
-	userAgent := "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"
-	if item.UserAgent != "" {
-		userAgent = item.UserAgent
-	}
-	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("Accept", "text/html")
-	for k, v := range extraHeaders {
+	for k, v := range item.Config.Headers {
 		req.Header.Set(k, v)
 	}
+	req.Header.Set("User-Agent", item.Config.UserAgent)
 
 	res, err := client.Do(req)
 	if err != nil {
@@ -58,27 +53,42 @@ func Run(item types.Item, defaultSelectors []string, extraHeaders map[string]str
 		return "", fmt.Sprintf("%s", err)
 	} else if res.StatusCode != 200 {
 		msg := fmt.Sprintf("Request error (%d)", res.StatusCode)
-		logger.Info(msg)
+		logger.Error(msg)
 		return "", msg
 	}
 
 	defer res.Body.Close()
 
-	doc, err := goquery.NewDocumentFromReader(res.Body)
+	var reader io.ReadCloser
+	switch res.Header.Get("Content-Encoding") {
+	case "gzip":
+		reader, err = gzip.NewReader(res.Body)
+		defer reader.Close()
+	default:
+		reader = res.Body
+	}
+
+	doc, err := goquery.NewDocumentFromReader(reader)
 	if err != nil {
 		log.Error(err)
 		return "", fmt.Sprintf("%s", err)
 	}
 
+	body := doc.Find("html").Text()
+	err = checkContent(body)
+	if err != nil {
+		logger.Error(err)
+	}
+
 	content := ""
-	for _, selector := range selectors {
+	for _, selector := range item.Config.Selectors {
 		selection := doc.Find(selector).First()
 		content = fmt.Sprintf("%s %s", content, selection.Text())
 	}
 
 	logger.WithFields(log.Fields{
 		"content": content,
-	}).Info("Found")
+	}).Info("Success")
 
 	return content, ""
 }
