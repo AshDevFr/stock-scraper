@@ -67,11 +67,6 @@ func (p *AmazonParser) Parse(defaultConfig types.ItemConfig, item types.Item) ty
 
 func (p *AmazonParser) Run(item types.Item) (string, string, error) {
 	return scrapers.Run(item, func(body string, price *types.Price, selectionTexts map[string]string) (string, error) {
-		if price != nil && item.Config.MaxPrice != nil {
-			if price.Value > *item.Config.MaxPrice {
-				return "Price too high", nil
-			}
-		}
 		return "", nil
 	})
 }

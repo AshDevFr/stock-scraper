@@ -63,6 +63,10 @@ func (p *NeweggParser) Parse(defaultConfig types.ItemConfig, item types.Item) ty
 		}
 	}
 
+	if item.Config.PriceSelector == "" {
+		item.Config.PriceSelector = "#app > div.page-content > div.page-section > div > div > div.row-side > div.product-buy-box > div.product-pane > div.product-price > ul > li.price-current"
+	}
+
 	defaultHeaders := make(map[string]string)
 	item.Config.Headers = ParseHeaders(defaultConfig, defaultHeaders, item)
 

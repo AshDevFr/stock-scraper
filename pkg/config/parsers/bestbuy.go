@@ -61,6 +61,10 @@ func (p *BestBuyParser) Parse(defaultConfig types.ItemConfig, item types.Item) t
 		}
 	}
 
+	if item.Config.PriceSelector == "" {
+		item.Config.PriceSelector = "div > div > div > div > div.price-box > div:nth-child(1) > div > div > span:nth-child(1)"
+	}
+
 	defaultHeaders := make(map[string]string)
 	defaultHeaders["accept-encoding"] = "gzip"
 	//defaultHeaders["cache-control"] = "no-cache"

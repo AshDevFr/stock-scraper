@@ -92,6 +92,13 @@ func Run(item types.Item, checkContent func(string, *types.Price, map[string]str
 		text := strings.TrimSpace(selection.Text())
 		if text != "" {
 			price = utils.ParsePrice(text)
+			if price != nil && item.Config.MaxPrice != nil {
+				if price.Value > *item.Config.MaxPrice {
+					warn := "Price too high"
+					logger.Warn(warn)
+					return "", warn, nil
+				}
+			}
 		}
 	}
 
@@ -107,6 +114,7 @@ func Run(item types.Item, checkContent func(string, *types.Price, map[string]str
 
 	logger.WithFields(log.Fields{
 		"content": content,
+		"price":   price,
 	}).Info("Success")
 
 	return content, "", nil
