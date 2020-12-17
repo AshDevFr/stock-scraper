@@ -29,8 +29,28 @@ func ParseItem(defaultConfig types.ItemConfig, item types.Item) types.Item {
 	item.Config.UserAgent = ParseUserAgent(defaultConfig, item)
 	item.Config.Rules = ParseRules(defaultConfig, item)
 	item.Config.OpenLinks = ParseOpenLinks(defaultConfig, item)
+	item.Config.PriceSelector = ParsePriceSelector(defaultConfig, item)
+	item.Config.MaxPrice = ParseMaxPrice(defaultConfig, item)
 
 	return item.Parser.Parse(defaultConfig, item)
+}
+
+func ParsePriceSelector(defaultConfig types.ItemConfig, item types.Item) string {
+	if item.Config.PriceSelector == "" {
+		if defaultConfig.PriceSelector != "" {
+			return defaultConfig.PriceSelector
+		}
+	}
+	return item.Config.PriceSelector
+}
+
+func ParseMaxPrice(defaultConfig types.ItemConfig, item types.Item) *float64 {
+	if item.Config.MaxPrice == nil {
+		if defaultConfig.MaxPrice != nil {
+			return defaultConfig.MaxPrice
+		}
+	}
+	return item.Config.MaxPrice
 }
 
 func ParseCron(defaultConfig types.ItemConfig, item types.Item) string {
@@ -38,8 +58,9 @@ func ParseCron(defaultConfig types.ItemConfig, item types.Item) string {
 		if defaultConfig.Cron != "" {
 			return defaultConfig.Cron
 		}
+		return defaultCron
 	}
-	return defaultCron
+	return item.Config.Cron
 }
 
 func ParseUserAgent(defaultConfig types.ItemConfig, item types.Item) string {
@@ -47,8 +68,9 @@ func ParseUserAgent(defaultConfig types.ItemConfig, item types.Item) string {
 		if defaultConfig.UserAgent != "" {
 			return defaultConfig.UserAgent
 		}
+		return defaultUserAgent
 	}
-	return defaultUserAgent
+	return item.Config.UserAgent
 }
 
 func ParseOpenLinks(defaultConfig types.ItemConfig, item types.Item) *bool {

@@ -27,8 +27,8 @@ func (p *DefaultParser) Parse(defaultConfig types.ItemConfig, item types.Item) t
 	return item
 }
 
-func (p *DefaultParser) Run(item types.Item) (string, string) {
-	return scrapers.Run(item, func(text string) error {
-		return nil
+func (p *DefaultParser) Run(item types.Item) (string, string, error) {
+	return scrapers.Run(item, func(body string, price *types.Price, selectionTexts map[string]string) (string, error) {
+		return "", nil
 	})
 }

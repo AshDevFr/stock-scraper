@@ -1,12 +1,14 @@
 package types
 
 type ItemConfig struct {
-	Cron      string            `json:"cron"`
-	Headers   map[string]string `json:"headers"`
-	Rules     []Rule            `json:"rules"`
-	Selectors []string          `json:"selectors"`
-	UserAgent string            `json:"userAgent"`
-	OpenLinks *bool              `json:"openLinks"`
+	Cron          string            `json:"cron"`
+	Headers       map[string]string `json:"headers"`
+	Rules         []Rule            `json:"rules"`
+	Selectors     []string          `json:"selectors"`
+	UserAgent     string            `json:"userAgent"`
+	OpenLinks     *bool             `json:"openLinks"`
+	MaxPrice      *float64          `json:"maxPrice"`
+	PriceSelector string            `json:"priceSelector"`
 }
 
 type Rule struct {
@@ -21,10 +23,15 @@ type Action struct {
 	Content string `json:"content"`
 }
 
+type Price struct {
+	Symbol string
+	Value  float64
+}
+
 type Parser interface {
 	Label() string
 	Parse(ItemConfig, Item) Item
-	Run(Item) (string, string)
+	Run(Item) (string, string, error)
 }
 
 type Item struct {

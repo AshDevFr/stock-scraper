@@ -69,11 +69,11 @@ func (p *NeweggParser) Parse(defaultConfig types.ItemConfig, item types.Item) ty
 	return item
 }
 
-func (p *NeweggParser) Run(item types.Item) (string, string) {
-	return scrapers.Run(item, func(text string) error {
-		if strings.Contains(strings.ToLower(text), strings.ToLower("Are you a human?")) {
-			return errors.New("Anti bot recaptcha")
+func (p *NeweggParser) Run(item types.Item) (string, string, error) {
+	return scrapers.Run(item, func(body string, price *types.Price, selectionTexts map[string]string) (string, error) {
+		if strings.Contains(strings.ToLower(body), strings.ToLower("Are you a human?")) {
+			return "", errors.New("Anti bot recaptcha")
 		}
-		return nil
+		return "", nil
 	})
 }

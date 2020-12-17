@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
@@ -29,10 +30,12 @@ func init() {
 
 func runScraper(item types.Item) {
 	scraperType := item.Parser.Label()
-	content, err := item.Parser.Run(item)
+	content, warn, err := item.Parser.Run(item)
 
-	if err != "" {
-		websocket.SendUpdateMessage(scraperType, item, "error", err)
+	if err != nil {
+		websocket.SendUpdateMessage(scraperType, item, "error", fmt.Sprintf("%s", err))
+	} else if warn != "" {
+		websocket.SendUpdateMessage(scraperType, item, "warn", warn)
 	} else {
 		websocket.SendUpdateMessage(scraperType, item, "ok", content)
 		rules := config.DefaultConfig.Rules
