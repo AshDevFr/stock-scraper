@@ -1,7 +1,7 @@
 package parsers
 
 import (
-	"stock_scraper/pkg/scrapers"
+	"stock_scraper/internal/scrapers"
 	"stock_scraper/types"
 )
 

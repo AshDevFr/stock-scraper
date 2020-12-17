@@ -4,7 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/url"
 	"regexp"
-	"stock_scraper/pkg/scrapers"
+	"stock_scraper/internal/scrapers"
 	"stock_scraper/types"
 )
 

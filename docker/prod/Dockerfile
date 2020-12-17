@@ -26,10 +26,10 @@ WORKDIR /app
 
 RUN go mod download
 
-COPY pkg /app/pkg
 COPY types /app/types
 COPY internal /app/internal
-COPY main.go /app/
+COPY *.go /app/
+COPY user_agents.txt /app/
 RUN go build -o stock_scraper .
 
 
@@ -40,4 +40,5 @@ FROM alpine
 RUN mkdir /app
 COPY --from=app /app/stock_scraper /app/stock_scraper
 COPY --from=web /app/build /app/static
+COPY user_agents.txt /app/
 WORKDIR /app

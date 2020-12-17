@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"stock_scraper/pkg/utils"
+	"stock_scraper/internal/utils"
 	"stock_scraper/types"
 	"strings"
 	"time"

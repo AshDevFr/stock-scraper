@@ -5,7 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"math/rand"
-	"stock_scraper/pkg/config/parsers"
+	"stock_scraper/internal/config/parsers"
 	"stock_scraper/types"
 	"strings"
 	"time"
