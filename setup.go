@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/markbates/pkger"
 	"github.com/robfig/cron/v3"
@@ -28,9 +27,6 @@ func setupRouter() (*gin.Engine, *websocket.Hub) {
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
 
-	// Serve frontend static files
-	router.Use(static.Serve("/", pkger.Dir("./static")))
-
 	// Setup route group for the API
 	api := router.Group("/api")
 	{
@@ -47,6 +43,8 @@ func setupRouter() (*gin.Engine, *websocket.Hub) {
 	router.GET("/ws", func(c *gin.Context) {
 		websocket.ServeWs(hub, c.Writer, c.Request)
 	})
+
+	router.Use(gin.WrapH(http.FileServer(pkger.Dir("/static"))))
 
 	return router, hub
 }

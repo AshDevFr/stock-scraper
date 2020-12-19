@@ -1,3 +1,4 @@
 /_tmp
 /config.json
-/stock_scraper
+/stock_scraper*
+/config-test.json

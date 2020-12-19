@@ -50,5 +50,5 @@ type Config struct {
 	Items         []Item     `json:"items"`
 	DefaultConfig ItemConfig `json:"defaultConfig"`
 	ItemMap       map[string]*Item
-	Concurrency *int `json:"concurrency"`
+	Concurrency   *int `json:"concurrency"`
 }

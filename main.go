@@ -4,7 +4,7 @@ import (
 	"flag"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	config2 "stock_scraper/internal/config"
+	configUtils "stock_scraper/internal/config"
 	"stock_scraper/types"
 	"time"
 )
@@ -18,8 +18,7 @@ var (
 func init() {
 	http.DefaultClient.Timeout = time.Second * 300
 
-	config = config2.LoadConfig("./config.json")
-	config2.LoadUserAgents("./user_agents.txt")
+	configUtils.LoadUserAgents("./user_agents.txt")
 
 	maxConcurrency := defaultMaxConcurrency
 	if config.Concurrency != nil {
@@ -32,8 +31,11 @@ func main() {
 	serverOpt := flag.Bool("s", false, "Enable the server")
 	verboseOpt := flag.Bool("v", false, "Verbose")
 	watchOpt := flag.Bool("w", false, "Watch for changes (Not required if the server is enabled)")
+	configFile := flag.String("f", "config.json", "Config file")
 
 	flag.Parse()
+
+	config = configUtils.LoadConfig(*configFile)
 
 	if *verboseOpt {
 		log.SetLevel(log.DebugLevel)
