@@ -5,7 +5,7 @@ FROM node:alpine as web
 
 RUN apk update && \
   apk upgrade --no-cache && \
-  apk add --no-cache build-base python
+  apk add --no-cache build-base python3
 
 RUN mkdir /app
 COPY web /app

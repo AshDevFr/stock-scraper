@@ -2,3 +2,8 @@
 /config.json
 /stock_scraper*
 /config-test.json
+/releases
+/dist
+/*-packr.go
+/pkged*.go
+/static

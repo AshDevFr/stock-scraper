@@ -1,4 +1,12 @@
+/_tmp
 /docker/prod/Dockerfile
 /web/node_modules
 /web/build
-config.json
+/config.json
+/stock_scraper*
+/config-test.json
+/releases
+/dist
+/.gitlab-ci.yml
+/*-packr.go
+/pkged*.go
