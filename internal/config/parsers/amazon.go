@@ -43,8 +43,8 @@ func (p *AmazonParser) Parse(defaultConfig types.ItemConfig, item types.Item) ty
 	}
 
 	if itemId != "" {
-		item.TrackedUrl = "https://www.amazon.com/dp/" + itemId
-		item.AddToCartUrl = "https://www.amazon.com/gp/aws/cart/add-res.html?ASIN.1=" + itemId + "&Quantity.1=1"
+		item.TrackedUrl = "https://smile.amazon.com/dp/" + itemId
+		item.AddToCartUrl = "https://smile.amazon.com/gp/aws/cart/add-res.html?ASIN.1=" + itemId + "&Quantity.1=1"
 	}
 
 	item.Config.Selectors = ParseSelectors(defaultConfig, item)

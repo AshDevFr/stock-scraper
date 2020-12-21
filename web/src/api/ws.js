@@ -19,7 +19,6 @@ export const connect = callback => {
     console.log("Socket Error: ", error);
   };
 
-  console.log(socket)
   return socket;
 };
 

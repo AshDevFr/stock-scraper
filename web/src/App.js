@@ -1,25 +1,27 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
 import './App.css';
 import Header from "./components/Header.js";
 import Logs from "./components/Logs";
-import {connect} from "./api/ws";
 
-let socket;
+import {fetchConfigAction} from "./actions/configSlice";
+import WebSocketProvider from "./components/WebSocketProvider";
+
 const App = () => {
-  const [messages, setMessages] = useState([]);
-  const addMessage = (msg) => setMessages(previousMessages => [...previousMessages, msg]);
+  const dispatch = useDispatch();
+  const {loaded} = useSelector((state) => state.config);
 
   useEffect(() => {
-    if (!socket || socket.readyState === WebSocket.CLOSED) {
-      socket = connect(addMessage);
+    if (!loaded) {
+      dispatch(fetchConfigAction());
     }
-  }, [addMessage]);
+  }, [loaded, dispatch]);
 
   return (
-    <div>
+    <WebSocketProvider>
       <Header/>
-      <Logs logs={messages}/>
-    </div>
+      <Logs/>
+    </WebSocketProvider>
   );
 }
 
