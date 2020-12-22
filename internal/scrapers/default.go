@@ -106,7 +106,41 @@ func getContent(results []types.ParsedResults) (string, string) {
 	return content, prices
 }
 
-func Run(item types.Item, checkContent func(string, []types.ParsedResults) (string, error)) (types.Result, string, error) {
+func processReader(item types.Item, logger *log.Entry, reader io.ReadCloser, checkContent types.CheckContentFunc) (types.Result, string, error) {
+	results, body, err := processDoc(item, reader)
+	warn := processPrices(item, results)
+	if warn != "" {
+		logger.Warn(warn)
+		return types.Result{Results: results}, warn, nil
+	}
+
+	warn, err = checkContent(body, results)
+	if err != nil {
+		logger.Error(err)
+		return types.Result{Results: results}, "", err
+	}
+	if warn != "" {
+		logger.Warn(warn)
+		return types.Result{Results: results}, warn, nil
+	}
+
+	content, prices := getContent(results)
+	logger.WithFields(log.Fields{
+		"content": content,
+		"prices":  prices,
+	}).Info("Success")
+
+	return types.Result{
+		Content: content,
+		Results: results,
+	}, "", nil
+}
+
+func Run(item types.Item, checkContent types.CheckContentFunc) (types.Result, string, error) {
+	if item.Config.RunWeb != nil && *item.Config.RunWeb {
+		return RunWeb(item, checkContent)
+	}
+
 	itemUrl := item.TrackedUrl
 	if itemUrl == "" {
 		log.WithFields(log.Fields{
@@ -163,31 +197,5 @@ func Run(item types.Item, checkContent func(string, []types.ParsedResults) (stri
 		reader = res.Body
 	}
 
-	results, body, err := processDoc(item, reader)
-	warn := processPrices(item, results)
-	if warn != "" {
-		logger.Warn(warn)
-		return types.Result{Results: results}, warn, nil
-	}
-
-	warn, err = checkContent(body, results)
-	if err != nil {
-		logger.Error(err)
-		return types.Result{Results: results}, "", err
-	}
-	if warn != "" {
-		logger.Warn(warn)
-		return types.Result{Results: results}, warn, nil
-	}
-
-	content, prices := getContent(results)
-	logger.WithFields(log.Fields{
-		"content": content,
-		"prices":  prices,
-	}).Info("Success")
-
-	return types.Result{
-		Content: content,
-		Results: results,
-	}, "", nil
+	return processReader(item, logger, reader, checkContent)
 }

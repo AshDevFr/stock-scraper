@@ -32,3 +32,5 @@ type ParsedResults struct {
 	ItemLink          *string
 	ItemAddToCartLink *string
 }
+
+type CheckContentFunc func(string, []ParsedResults) (string, error)

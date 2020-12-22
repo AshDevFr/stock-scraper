@@ -2,22 +2,23 @@ package scrapers
 
 import (
 	"context"
-	"fmt"
-	"github.com/PuerkitoBio/goquery"
+	"errors"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"stock_scraper/types"
 	"strings"
+	"time"
 )
 
-func RunWeb(item types.Item) (string, string) {
+func RunWeb(item types.Item, checkContent func(string, []types.ParsedResults) (string, error)) (types.Result, string, error) {
 	itemUrl := item.TrackedUrl
 	if itemUrl == "" {
 		log.WithFields(log.Fields{
 			"item": item,
 		}).Error("No url provided")
-		return "", "No url provided"
+		return types.Result{}, "", errors.New("No url provided")
 	}
 
 	logger := log.WithFields(log.Fields{
@@ -43,33 +44,20 @@ func RunWeb(item types.Item) (string, string) {
 			network.Enable(),
 			network.SetExtraHTTPHeaders(headers),
 			chromedp.Navigate(itemUrl),
-			chromedp.WaitVisible(item.Config.Selectors[0]),
+			chromedp.ActionFunc(func(ctx context.Context) error {
+				time.Sleep(time.Second * 1)
+				return nil
+			}),
 			chromedp.OuterHTML("html", &body),
 		},
 	)
 
 	if err != nil {
 		logger.Error(err)
-		return "", fmt.Sprintf("%s", err)
+		return types.Result{}, "", err
 	}
 
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(body))
-	if err != nil {
-		log.Error(err)
-		return "", fmt.Sprintf("%s", err)
-	}
-
-	content := ""
-	for _, selector := range item.Config.Selectors {
-		selection := doc.Find(selector).First()
-		content = fmt.Sprintf("%s %s", content, selection.Text())
-	}
-
-	logger.WithFields(log.Fields{
-		"content": content,
-	}).Info("Success")
-
-	return content, ""
+	return processReader(item, logger, ioutil.NopCloser(strings.NewReader(body)), checkContent)
 }
 
 func getBrowserCtx(headless bool) (context.Context, context.CancelFunc) {
