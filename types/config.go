@@ -4,6 +4,7 @@ type ItemConfig struct {
 	Cron          string            `json:"cron"`
 	Headers       map[string]string `json:"headers"`
 	Rules         []Rule            `json:"rules"`
+	ItemSelector string            `json:"itemSelector"`
 	Selectors     []string          `json:"selectors"`
 	UserAgent     string            `json:"userAgent"`
 	OpenLinks     *bool             `json:"openLinks"`
@@ -16,23 +17,6 @@ type Rule struct {
 	Strategy  string   `json:"strategy"`  // has, match
 	Text      string   `json:"text"`
 	Actions   []string `json:"actions"` // notify, open
-}
-
-type Action struct {
-	Type    string `json:"type"`
-	Content string `json:"content"`
-}
-
-type Price struct {
-	Symbol string
-	Value  float64
-}
-
-type Parser interface {
-	Label() string
-	ParseId(Item) string
-	Parse(ItemConfig, Item) Item
-	Run(Item) (string, string, error)
 }
 
 type Item struct {

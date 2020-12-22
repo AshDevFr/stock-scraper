@@ -36,7 +36,7 @@ func (p *NeweggParser) ParseId(item types.Item) string {
 		}
 	}
 
-	r := regexp.MustCompile(".*/p/([^\\/]+)")
+	r := regexp.MustCompile(".*/p/(N\\d+)")
 	match := r.FindStringSubmatch(u.Path)
 
 	if len(match) > 1 {
@@ -75,8 +75,8 @@ func (p *NeweggParser) Parse(defaultConfig types.ItemConfig, item types.Item) ty
 	return item
 }
 
-func (p *NeweggParser) Run(item types.Item) (string, string, error) {
-	return scrapers.Run(item, func(body string, price *types.Price, selectionTexts map[string]string) (string, error) {
+func (p *NeweggParser) Run(item types.Item) (types.Result, string, error) {
+	return scrapers.Run(item, func(body string, results []types.ParsedResults) (string, error) {
 		if strings.Contains(strings.ToLower(body), strings.ToLower("Are you a human?")) {
 			return "", errors.New("Anti bot recaptcha")
 		}

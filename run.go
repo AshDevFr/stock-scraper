@@ -14,7 +14,7 @@ import (
 func runScraper(item types.Item) {
 	parallelChan <- true
 	scraperType := item.Parser.Label()
-	content, warn, err := item.Parser.Run(item)
+	result, warn, err := item.Parser.Run(item)
 	defer func() { <-parallelChan }()
 
 	if err != nil {
@@ -22,14 +22,14 @@ func runScraper(item types.Item) {
 	} else if warn != "" {
 		websocket.SendUpdateMessage(scraperType, item, "warn", warn)
 	} else {
-		websocket.SendUpdateMessage(scraperType, item, "ok", content)
+		websocket.SendUpdateMessage(scraperType, item, "ok", result.Content)
 		rules := config.DefaultConfig.Rules
 		if item.Config.Rules != nil {
 			rules = item.Config.Rules
 		}
 		previousContent := state.GetContent(item.Uuid)
-		actions := process.ApplyRules(rules, previousContent, content)
-		state.SetContent(item.Uuid, content)
+		actions := process.ApplyRules(rules, previousContent, result.Content)
+		state.SetContent(item.Uuid, result.Content)
 
 		if len(actions) > 0 {
 			if *item.Config.OpenLinks && item.Url != "" {

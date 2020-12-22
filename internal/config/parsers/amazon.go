@@ -67,8 +67,8 @@ func (p *AmazonParser) Parse(defaultConfig types.ItemConfig, item types.Item) ty
 	return item
 }
 
-func (p *AmazonParser) Run(item types.Item) (string, string, error) {
-	return scrapers.Run(item, func(body string, price *types.Price, selectionTexts map[string]string) (string, error) {
+func (p *AmazonParser) Run(item types.Item) (types.Result, string, error) {
+	return scrapers.Run(item, func(body string, results []types.ParsedResults) (string, error) {
 		return "", nil
 	})
 }

@@ -81,8 +81,8 @@ func (p *BestBuyParser) Parse(defaultConfig types.ItemConfig, item types.Item) t
 	return item
 }
 
-func (p *BestBuyParser) Run(item types.Item) (string, string, error) {
-	return scrapers.Run(item, func(body string, price *types.Price, selectionTexts map[string]string) (string, error) {
+func (p *BestBuyParser) Run(item types.Item) (types.Result, string, error) {
+	return scrapers.Run(item, func(body string, results []types.ParsedResults) (string, error) {
 		return "", nil
 	})
 }

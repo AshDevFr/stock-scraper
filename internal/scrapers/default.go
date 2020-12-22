@@ -14,13 +14,95 @@ import (
 	"time"
 )
 
-func Run(item types.Item, checkContent func(string, *types.Price, map[string]string) (string, error)) (string, string, error) {
+func processDoc(item types.Item, reader io.ReadCloser) ([]types.ParsedResults, string, error) {
+	doc, err := goquery.NewDocumentFromReader(reader)
+	if err != nil {
+		log.Error(err)
+		return []types.ParsedResults{}, "", err
+	}
+
+	var results []types.ParsedResults
+	itemSelector := item.Config.ItemSelector
+	if itemSelector == "" {
+		itemSelector = "html"
+	}
+
+	itemList := doc.Find(itemSelector)
+
+	itemList.Each(func(i int, s *goquery.Selection) {
+		result := types.ParsedResults{Result: make(map[string]string)}
+		for _, selector := range item.Config.Selectors {
+			selection := s.Find(selector)
+			text := strings.TrimSpace(selection.Text())
+			result.Result[selector] = text
+			result.Content = fmt.Sprintf("%s %s", result.Content, text)
+		}
+
+		if item.Config.PriceSelector != "" {
+			selection := s.Find(item.Config.PriceSelector)
+			text := strings.TrimSpace(selection.Text())
+			if text != "" {
+				result.Price = utils.ParsePrice(text)
+			}
+		}
+
+		results = append(results, result)
+	})
+
+	return results, doc.Find("html").Text(), nil
+}
+
+func processPrices(item types.Item, results []types.ParsedResults) string {
+	prices := 0
+	validPrices := 0
+	for _, result := range results {
+		if result.Price != nil {
+			prices++
+		}
+		if result.Price != nil && item.Config.MaxPrice != nil {
+			if result.Price.Value <= *item.Config.MaxPrice {
+				validPrices++
+			}
+		}
+	}
+
+	if prices == 0 || validPrices > 0 {
+		return ""
+	}
+
+	warn := "No valid price found"
+	return warn
+}
+
+func getContent(results []types.ParsedResults) (string, string) {
+	content := ""
+	prices := ""
+	for _, result := range results {
+		if content == "" {
+			content = result.Content
+		} else {
+			content = fmt.Sprintf("%s|%s", content, result.Content)
+		}
+
+		if result.Price != nil {
+			if prices == "" {
+				prices = fmt.Sprintf("%s%d", result.Price.Symbol, result.Price.Value)
+			} else {
+				prices = fmt.Sprintf("%s|%s%d", prices, result.Price.Symbol, result.Price.Value)
+			}
+		}
+
+	}
+	return content, prices
+}
+
+func Run(item types.Item, checkContent func(string, []types.ParsedResults) (string, error)) (types.Result, string, error) {
 	itemUrl := item.TrackedUrl
 	if itemUrl == "" {
 		log.WithFields(log.Fields{
 			"item": item,
 		}).Error("No url provided")
-		return "", "", errors.New("No url provided")
+		return types.Result{}, "", errors.New("No url provided")
 	}
 
 	tr := &http.Transport{
@@ -41,7 +123,7 @@ func Run(item types.Item, checkContent func(string, *types.Price, map[string]str
 	req, err := http.NewRequest("GET", itemUrl, nil)
 	if err != nil {
 		logger.Error(err)
-		return "", "", err
+		return types.Result{}, "", err
 	}
 
 	req.Header.Set("Accept", "text/html")
@@ -53,11 +135,11 @@ func Run(item types.Item, checkContent func(string, *types.Price, map[string]str
 	res, err := client.Do(req)
 	if err != nil {
 		logger.Error(err)
-		return "", "", err
+		return types.Result{}, "", err
 	} else if res.StatusCode != 200 {
 		err = errors.New(fmt.Sprintf("Request error (%d)", res.StatusCode))
 		logger.Error(err)
-		return "", "", err
+		return types.Result{}, "", err
 	}
 
 	defer res.Body.Close()
@@ -71,51 +153,31 @@ func Run(item types.Item, checkContent func(string, *types.Price, map[string]str
 		reader = res.Body
 	}
 
-	doc, err := goquery.NewDocumentFromReader(reader)
-	if err != nil {
-		log.Error(err)
-		return "", "", err
+	results, body, err := processDoc(item, reader)
+	warn := processPrices(item, results)
+	if warn != "" {
+		logger.Warn(warn)
+		return types.Result{Results: results}, warn, nil
 	}
 
-	content := ""
-	results := make(map[string]string)
-	for _, selector := range item.Config.Selectors {
-		selection := doc.Find(selector).First()
-		text := strings.TrimSpace(selection.Text())
-		results[selector] = text
-		content = fmt.Sprintf("%s %s", content, text)
-	}
-
-	var price *types.Price
-	if item.Config.PriceSelector != "" {
-		selection := doc.Find(item.Config.PriceSelector).First()
-		text := strings.TrimSpace(selection.Text())
-		if text != "" {
-			price = utils.ParsePrice(text)
-			if price != nil && item.Config.MaxPrice != nil {
-				if price.Value > *item.Config.MaxPrice {
-					warn := "Price too high"
-					logger.Warn(warn)
-					return "", warn, nil
-				}
-			}
-		}
-	}
-
-	body := doc.Find("html").Text()
-	warn, err := checkContent(body, price, results)
+	warn, err = checkContent(body, results)
 	if err != nil {
 		logger.Error(err)
+		return types.Result{Results: results}, "", err
 	}
 	if warn != "" {
 		logger.Warn(warn)
-		return "", warn, nil
+		return types.Result{Results: results}, warn, nil
 	}
 
+	content, prices := getContent(results)
 	logger.WithFields(log.Fields{
 		"content": content,
-		"price":   price,
+		"prices":  prices,
 	}).Info("Success")
 
-	return content, "", nil
+	return types.Result{
+		Content: content,
+		Results: results,
+	}, "", nil
 }

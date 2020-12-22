@@ -31,6 +31,7 @@ func ParseItem(defaultConfig types.ItemConfig, item types.Item) types.Item {
 	item.Config.UserAgent = ParseUserAgent(defaultConfig, item)
 	item.Config.Rules = ParseRules(defaultConfig, item)
 	item.Config.OpenLinks = ParseOpenLinks(defaultConfig, item)
+	item.Config.ItemSelector = ParseItemSelector(defaultConfig, item)
 	item.Config.PriceSelector = ParsePriceSelector(defaultConfig, item)
 	item.Config.MaxPrice = ParseMaxPrice(defaultConfig, item)
 
@@ -49,6 +50,15 @@ func ParseType(item types.Item) string {
 		return item.Parser.Label()
 	}
 	return item.Type
+}
+
+func ParseItemSelector(defaultConfig types.ItemConfig, item types.Item) string {
+	if item.Config.ItemSelector == "" {
+		if defaultConfig.ItemSelector != "" {
+			return defaultConfig.ItemSelector
+		}
+	}
+	return item.Config.ItemSelector
 }
 
 func ParsePriceSelector(defaultConfig types.ItemConfig, item types.Item) string {
