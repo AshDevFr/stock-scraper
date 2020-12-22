@@ -1,6 +1,7 @@
 package state
 
 import (
+	"stock_scraper/types"
 	"sync"
 	"time"
 )
@@ -11,13 +12,13 @@ var contentsMutex = &sync.Mutex{}
 
 type State struct {
 	alerts   map[string]*time.Time
-	contents map[string]*string
+	contents map[string]*types.Result
 }
 
 func NewState() *State {
 	return &State{
 		alerts:   make(map[string]*time.Time),
-		contents: make(map[string]*string),
+		contents: make(map[string]*types.Result),
 	}
 }
 
@@ -38,7 +39,7 @@ func ShouldRunAlert(uuid string, callback func()) {
 	alertsMutex.Unlock()
 
 	if lastAlert != nil {
-		nextAlert := lastAlert.Add(time.Minute * 1)
+		nextAlert := lastAlert.Add(time.Minute * 3)
 
 		if nextAlert.After(time.Now()) {
 			return
@@ -53,7 +54,7 @@ func ShouldRunAlert(uuid string, callback func()) {
 	go callback()
 }
 
-func GetContent(uuid string) *string {
+func GetContent(uuid string) *types.Result {
 	state := GetState()
 	contentsMutex.Lock()
 	content := state.contents[uuid]
@@ -61,9 +62,9 @@ func GetContent(uuid string) *string {
 	return content
 }
 
-func SetContent(uuid string, content string) {
+func SetContent(uuid string, result types.Result) {
 	state := GetState()
 	contentsMutex.Lock()
-	state.contents[uuid] = &content
+	state.contents[uuid] = &result
 	contentsMutex.Unlock()
 }

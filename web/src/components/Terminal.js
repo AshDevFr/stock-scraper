@@ -1,4 +1,4 @@
-import React, {useRef, useEffect} from "react";
+import React, {useEffect, useRef} from "react";
 import styled from 'styled-components';
 import {useSelector} from "react-redux";
 
@@ -31,11 +31,11 @@ const renderLevel = (level) => {
     case "error": {
       return (<ErrorSpan>[Error] </ErrorSpan>)
     }
-    case "info": {
-      return (<InfoSpan>[Info] &nbsp; </InfoSpan>)
+    case "warn": {
+      return (<InfoSpan>[Warn] &nbsp;</InfoSpan>)
     }
     default: {
-      return (<DefaultLogSpan>[Log] &nbsp; </DefaultLogSpan>)
+      return (<DefaultLogSpan>[Info] &nbsp;</DefaultLogSpan>)
     }
   }
 }
@@ -76,7 +76,7 @@ const Terminal = () => {
   const logs = messages.filter(m => m.type === 'update').slice(-50);
 
   const scrollToBottom = () => {
-    messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+    messagesEndRef.current.scrollIntoView({behavior: "smooth"})
   }
 
   useEffect(scrollToBottom, [logs]);
@@ -84,7 +84,7 @@ const Terminal = () => {
   return (
     <TerminalContainer>
       {logs.map(renderLog)}
-      <div ref={messagesEndRef} />
+      <div ref={messagesEndRef}/>
     </TerminalContainer>
   );
 }

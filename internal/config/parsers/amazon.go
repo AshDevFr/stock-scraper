@@ -39,15 +39,24 @@ func (p *AmazonParser) ParseId(item types.Item) string {
 	return ""
 }
 
+func (p *AmazonParser) ParseUrls(item types.Item) (string, string) {
+	itemId := item.Id
+	if itemId == "" {
+		itemId = p.ParseId(item)
+	}
+	if itemId == "" {
+		return item.Url, ""
+	}
+	return "https://smile.amazon.com/dp/" + itemId,
+		"https://smile.amazon.com/gp/aws/cart/add-res.html?ASIN.1=" + itemId + "&Quantity.1=1"
+}
+
 func (p *AmazonParser) Label() string {
 	return p.label
 }
 
 func (p *AmazonParser) Parse(defaultConfig types.ItemConfig, item types.Item) types.Item {
-	if item.Id != "" {
-		item.TrackedUrl = "https://smile.amazon.com/dp/" + item.Id
-		item.AddToCartUrl = "https://smile.amazon.com/gp/aws/cart/add-res.html?ASIN.1=" + item.Id + "&Quantity.1=1"
-	}
+	item.TrackedUrl, item.AddToCartUrl = p.ParseUrls(item)
 
 	item.Config.Selectors = ParseSelectors(defaultConfig, item)
 	if len(item.Config.Selectors) == 0 {
@@ -67,8 +76,10 @@ func (p *AmazonParser) Parse(defaultConfig types.ItemConfig, item types.Item) ty
 	return item
 }
 
+func checkAmazonContent(body string, results []types.ParsedResults) (string, error) {
+	return "", nil
+}
+
 func (p *AmazonParser) Run(item types.Item) (types.Result, string, error) {
-	return scrapers.Run(item, func(body string, results []types.ParsedResults) (string, error) {
-		return "", nil
-	})
+	return scrapers.Run(item, checkAmazonContent)
 }

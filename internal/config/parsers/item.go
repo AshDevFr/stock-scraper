@@ -9,16 +9,18 @@ import (
 )
 
 var (
-	defaultUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
-	defaultCron      = "@every 2 minutes"
-	defaultOpenLinks = false
-	neweggRegex      = regexp.MustCompile(`(?i)newegg\.com`)
-	bestbuyRegex     = regexp.MustCompile(`(?i)bestbuy\.com`)
-	amazonRegex      = regexp.MustCompile(`(?i)amazon\.com`)
-	defaultParser    = &DefaultParser{label: "default"}
-	amazonParser     = &AmazonParser{label: "amazon"}
-	bestbuyParser    = &BestBuyParser{label: "bestbuy"}
-	neweggParser     = &NeweggParser{label: "newegg"}
+	defaultUserAgent     = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+	defaultCron          = "@every 2 minutes"
+	defaultOpenLinks     = false
+	defaultOpenAddToCart = false
+	defaultRunWeb        = false
+	neweggRegex          = regexp.MustCompile(`(?i)newegg\.com`)
+	bestbuyRegex         = regexp.MustCompile(`(?i)bestbuy\.com`)
+	amazonRegex          = regexp.MustCompile(`(?i)amazon\.com`)
+	defaultParser        = &DefaultParser{label: "default"}
+	amazonParser         = &AmazonParser{label: "amazon"}
+	bestbuyParser        = &BestBuyParser{label: "bestbuy"}
+	neweggParser         = &NeweggParser{label: "newegg"}
 )
 
 func ParseItem(defaultConfig types.ItemConfig, item types.Item) types.Item {
@@ -31,7 +33,9 @@ func ParseItem(defaultConfig types.ItemConfig, item types.Item) types.Item {
 	item.Config.UserAgent = ParseUserAgent(defaultConfig, item)
 	item.Config.Rules = ParseRules(defaultConfig, item)
 	item.Config.OpenLinks = ParseOpenLinks(defaultConfig, item)
+	item.Config.OpenAddToCart = ParseOpenAddToCart(defaultConfig, item)
 	item.Config.ItemSelector = ParseItemSelector(defaultConfig, item)
+	item.Config.ItemLinkSelector = ParseItemLinkSelector(defaultConfig, item)
 	item.Config.PriceSelector = ParsePriceSelector(defaultConfig, item)
 	item.Config.MaxPrice = ParseMaxPrice(defaultConfig, item)
 
@@ -59,6 +63,15 @@ func ParseItemSelector(defaultConfig types.ItemConfig, item types.Item) string {
 		}
 	}
 	return item.Config.ItemSelector
+}
+
+func ParseItemLinkSelector(defaultConfig types.ItemConfig, item types.Item) string {
+	if item.Config.ItemLinkSelector == "" {
+		if defaultConfig.ItemLinkSelector != "" {
+			return defaultConfig.ItemLinkSelector
+		}
+	}
+	return item.Config.ItemLinkSelector
 }
 
 func ParsePriceSelector(defaultConfig types.ItemConfig, item types.Item) string {
@@ -106,6 +119,24 @@ func ParseOpenLinks(defaultConfig types.ItemConfig, item types.Item) *bool {
 		return defaultConfig.OpenLinks
 	}
 	return &defaultOpenLinks
+}
+
+func ParseRunWeb(defaultConfig types.ItemConfig, item types.Item) *bool {
+	if item.Config.RunWeb != nil {
+		return item.Config.RunWeb
+	} else if defaultConfig.RunWeb != nil {
+		return defaultConfig.RunWeb
+	}
+	return &defaultRunWeb
+}
+
+func ParseOpenAddToCart(defaultConfig types.ItemConfig, item types.Item) *bool {
+	if item.Config.OpenAddToCart != nil {
+		return item.Config.OpenAddToCart
+	} else if defaultConfig.OpenAddToCart != nil {
+		return defaultConfig.OpenAddToCart
+	}
+	return &defaultOpenAddToCart
 }
 
 func ParseRules(defaultConfig types.ItemConfig, item types.Item) []types.Rule {

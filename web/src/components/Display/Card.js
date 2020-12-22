@@ -14,7 +14,7 @@ const Link = styled.a``;
 
 const Card = ({item}) => (
   <CardDiv>
-    <CardTitle item={item} />
+    <CardTitle item={item}/>
     <div>
       Tracked url: <Link href={item.trackedUrl} target="_blank">link</Link>
     </div>

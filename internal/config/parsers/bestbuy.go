@@ -46,15 +46,24 @@ func (p *BestBuyParser) ParseId(item types.Item) string {
 	return ""
 }
 
+func (p *BestBuyParser) ParseUrls(item types.Item) (string, string) {
+	itemId := item.Id
+	if itemId == "" {
+		itemId = p.ParseId(item)
+	}
+	if itemId == "" {
+		return item.Url, ""
+	}
+	return "https://api.bestbuy.com/click/-/" + itemId + "/pdp",
+		"https://api.bestbuy.com/click/-/" + itemId + "/cart"
+}
+
 func (p *BestBuyParser) Label() string {
 	return p.label
 }
 
 func (p *BestBuyParser) Parse(defaultConfig types.ItemConfig, item types.Item) types.Item {
-	if item.Id != "" {
-		item.TrackedUrl = "https://api.bestbuy.com/click/-/" + item.Id + "/pdp"
-		item.AddToCartUrl = "https://api.bestbuy.com/click/-/" + item.Id + "/cart"
-	}
+	item.TrackedUrl, item.AddToCartUrl = p.ParseUrls(item)
 
 	item.Config.Selectors = ParseSelectors(defaultConfig, item)
 	if len(item.Config.Selectors) == 0 {
@@ -81,8 +90,10 @@ func (p *BestBuyParser) Parse(defaultConfig types.ItemConfig, item types.Item) t
 	return item
 }
 
+func checkBestBuyContent(body string, results []types.ParsedResults) (string, error) {
+	return "", nil
+}
+
 func (p *BestBuyParser) Run(item types.Item) (types.Result, string, error) {
-	return scrapers.Run(item, func(body string, results []types.ParsedResults) (string, error) {
-		return "", nil
-	})
+	return scrapers.Run(item, checkBestBuyContent)
 }

@@ -28,16 +28,20 @@ func runScraper(item types.Item) {
 			rules = item.Config.Rules
 		}
 		previousContent := state.GetContent(item.Uuid)
-		actions := process.ApplyRules(rules, previousContent, result.Content)
-		state.SetContent(item.Uuid, result.Content)
+		actions := process.ApplyRules(item, rules, previousContent, result)
+		state.SetContent(item.Uuid, result)
 
 		if len(actions) > 0 {
 			if *item.Config.OpenLinks && item.Url != "" {
 				state.ShouldRunAlert(item.Uuid, func() {
-					if item.AddToCartUrl != "" {
-						browser.Open(item.AddToCartUrl)
-					} else {
-						browser.Open(item.Url)
+					for _, action := range actions {
+						if *item.Config.OpenAddToCart && action.AddToCartLink != "" {
+							browser.Open(action.AddToCartLink)
+						} else if action.AddToCartLink != "" {
+							browser.Open(action.AddToCartLink)
+						} else {
+							browser.Open(item.Url)
+						}
 					}
 				})
 				log.Info("Opening link")

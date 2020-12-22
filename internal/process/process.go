@@ -50,33 +50,71 @@ func applyRule(rule types.Rule, text string) *types.Action {
 	return nil
 }
 
-func ApplyRules(rules []types.Rule, previousContent *string, newContent string) []types.Action {
-	if previousContent == nil {
+func applyRuleToContent(rule types.Rule, previousContent string, newContent string) *types.Action {
+	addedTexts, removedTexts := diff(previousContent, newContent)
+	addedText := strings.Join(addedTexts, "")
+	removedText := strings.Join(removedTexts, "")
+
+	var action *types.Action
+	switch rule.Condition {
+	case "changed":
+		if previousContent != newContent {
+			action = &types.Action{Type: "found", Content: newContent}
+		}
+	case "added":
+		action = applyRule(rule, addedText)
+	case "removed":
+		action = applyRule(rule, removedText)
+	case "text":
+		action = applyRule(rule, newContent)
+	}
+	return action
+}
+
+func applyRulesToContent(item types.Item, rules []types.Rule, previousContent string, newContent string, result *types.ParsedResults, actionsMap *map[string]types.Action) {
+	aMap := *actionsMap
+
+	for _, rule := range rules {
+		action := applyRuleToContent(rule, previousContent, newContent)
+		if action != nil {
+			action.Link = item.TrackedUrl
+			if result != nil {
+				if result.ItemLink != nil {
+					action.Link = *result.ItemLink
+				}
+				if result.ItemAddToCartLink != nil {
+					action.AddToCartLink = *result.ItemAddToCartLink
+				}
+			}
+			aMap[action.Link] = *action
+		}
+	}
+}
+
+func ApplyRules(item types.Item, rules []types.Rule, previousResult *types.Result, newResult types.Result) []types.Action {
+	if previousResult == nil {
 		return []types.Action{}
 	}
 
-	addedTexts, removedTexts := diff(*previousContent, newContent)
-	addedText := strings.Join(addedTexts, "")
-	removedText := strings.Join(removedTexts, "")
-	var actions []types.Action
+	actionsMap := make(map[string]types.Action)
+	if len(previousResult.Results) != len(newResult.Results) ||
+		len(previousResult.Results) < 2 ||
+		len(newResult.Results) < 2 {
+		previousContent := strings.TrimSpace(previousResult.Content)
+		newContent := strings.TrimSpace(newResult.Content)
+		applyRulesToContent(item, rules, previousContent, newContent, nil, &actionsMap)
+	} else {
+		for i, result := range newResult.Results {
+			previousContent := strings.TrimSpace(previousResult.Results[i].Content)
+			newContent := strings.TrimSpace(result.Content)
 
-	for _, rule := range rules {
-		var action *types.Action
-		switch rule.Condition {
-		case "changed":
-			if *previousContent != newContent {
-				action = &types.Action{Type: "found", Content: newContent}
-			}
-		case "added":
-			action = applyRule(rule, addedText)
-		case "removed":
-			action = applyRule(rule, removedText)
-		case "text":
-			action = applyRule(rule, newContent)
+			applyRulesToContent(item, rules, previousContent, newContent, &result, &actionsMap)
 		}
-		if action != nil {
-			actions = append(actions, *action)
-		}
+	}
+
+	var actions []types.Action
+	for _, value := range actionsMap {
+		actions = append(actions, value)
 	}
 
 	return actions

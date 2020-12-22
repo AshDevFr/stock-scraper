@@ -48,15 +48,24 @@ func (p *NeweggParser) ParseId(item types.Item) string {
 	return ""
 }
 
+func (p *NeweggParser) ParseUrls(item types.Item) (string, string) {
+	itemId := item.Id
+	if itemId == "" {
+		itemId = p.ParseId(item)
+	}
+	if itemId == "" {
+		return item.Url, ""
+	}
+	return "https://www.newegg.com/Product/Product.aspx?Item=" + itemId,
+		"https://secure.newegg.com/Shopping/AddtoCart.aspx?Submit=ADD&ItemList=" + itemId
+}
+
 func (p *NeweggParser) Label() string {
 	return p.label
 }
 
 func (p *NeweggParser) Parse(defaultConfig types.ItemConfig, item types.Item) types.Item {
-	if item.Id != "" {
-		item.TrackedUrl = "https://www.newegg.com/Product/Product.aspx?Item=" + item.Id
-		item.AddToCartUrl = "https://secure.newegg.com/Shopping/AddtoCart.aspx?Submit=ADD&ItemList=" + item.Id
-	}
+	item.TrackedUrl, item.AddToCartUrl = p.ParseUrls(item)
 
 	item.Config.Selectors = ParseSelectors(defaultConfig, item)
 	if len(item.Config.Selectors) == 0 {
@@ -75,11 +84,13 @@ func (p *NeweggParser) Parse(defaultConfig types.ItemConfig, item types.Item) ty
 	return item
 }
 
+func checkNeweggContent(body string, results []types.ParsedResults) (string, error) {
+	if strings.Contains(strings.ToLower(body), strings.ToLower("Are you a human?")) {
+		return "", errors.New("Anti bot recaptcha")
+	}
+	return "", nil
+}
+
 func (p *NeweggParser) Run(item types.Item) (types.Result, string, error) {
-	return scrapers.Run(item, func(body string, results []types.ParsedResults) (string, error) {
-		if strings.Contains(strings.ToLower(body), strings.ToLower("Are you a human?")) {
-			return "", errors.New("Anti bot recaptcha")
-		}
-		return "", nil
-	})
+	return scrapers.Run(item, checkNeweggContent)
 }

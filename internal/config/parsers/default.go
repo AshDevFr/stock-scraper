@@ -17,6 +17,10 @@ func (p *DefaultParser) ParseId(item types.Item) string {
 	return ""
 }
 
+func (p *DefaultParser) ParseUrls(item types.Item) (string, string) {
+	return item.Url, ""
+}
+
 func (p *DefaultParser) Label() string {
 	return p.label
 }
@@ -35,8 +39,10 @@ func (p *DefaultParser) Parse(defaultConfig types.ItemConfig, item types.Item) t
 	return item
 }
 
+func checkDefaultContent(body string, results []types.ParsedResults) (string, error) {
+	return "", nil
+}
+
 func (p *DefaultParser) Run(item types.Item) (types.Result, string, error) {
-	return scrapers.Run(item, func(body string, results []types.ParsedResults) (string, error) {
-		return "", nil
-	})
+	return scrapers.Run(item, checkDefaultContent)
 }

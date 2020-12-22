@@ -38,6 +38,16 @@ func processDoc(item types.Item, reader io.ReadCloser) ([]types.ParsedResults, s
 			result.Content = fmt.Sprintf("%s %s", result.Content, text)
 		}
 
+		if item.Config.ItemLinkSelector != "" {
+			selection := s.Find(item.Config.ItemLinkSelector)
+			url, exists := selection.Attr("href")
+			if exists && url != "" {
+				trackedUrl, addToCartUrl := item.Parser.ParseUrls(types.Item{Url: url})
+				result.ItemLink = &trackedUrl
+				result.ItemAddToCartLink = &addToCartUrl
+			}
+		}
+
 		if item.Config.PriceSelector != "" {
 			selection := s.Find(item.Config.PriceSelector)
 			text := strings.TrimSpace(selection.Text())
@@ -86,9 +96,9 @@ func getContent(results []types.ParsedResults) (string, string) {
 
 		if result.Price != nil {
 			if prices == "" {
-				prices = fmt.Sprintf("%s%d", result.Price.Symbol, result.Price.Value)
+				prices = fmt.Sprintf("%s%.2f", result.Price.Symbol, result.Price.Value)
 			} else {
-				prices = fmt.Sprintf("%s|%s%d", prices, result.Price.Symbol, result.Price.Value)
+				prices = fmt.Sprintf("%s|%s%.2f", prices, result.Price.Symbol, result.Price.Value)
 			}
 		}
 

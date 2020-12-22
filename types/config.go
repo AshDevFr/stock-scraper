@@ -1,15 +1,18 @@
 package types
 
 type ItemConfig struct {
-	Cron          string            `json:"cron"`
-	Headers       map[string]string `json:"headers"`
-	Rules         []Rule            `json:"rules"`
-	ItemSelector string            `json:"itemSelector"`
-	Selectors     []string          `json:"selectors"`
-	UserAgent     string            `json:"userAgent"`
-	OpenLinks     *bool             `json:"openLinks"`
-	MaxPrice      *float64          `json:"maxPrice"`
-	PriceSelector string            `json:"priceSelector"`
+	Cron             string            `json:"cron"`
+	Headers          map[string]string `json:"headers"`
+	Rules            []Rule            `json:"rules"`
+	ItemSelector     string            `json:"itemSelector"`
+	ItemLinkSelector string            `json:"itemLinkSelector"`
+	Selectors        []string          `json:"selectors"`
+	UserAgent        string            `json:"userAgent"`
+	OpenLinks        *bool             `json:"openLinks"`
+	OpenAddToCart    *bool             `json:"openAddToCart"`
+	MaxPrice         *float64          `json:"maxPrice"`
+	PriceSelector    string            `json:"priceSelector"`
+	RunWeb           *bool             `json:"runWeb"`
 }
 
 type Rule struct {
