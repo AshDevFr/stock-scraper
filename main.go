@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"github.com/webview/webview"
+	"github.com/zserge/lorca"
 	"net/http"
 	configUtils "stock_scraper/internal/config"
 	"stock_scraper/types"
@@ -30,12 +30,9 @@ func init() {
 }
 
 func loadWebview(addr string) {
-	w := webview.New(true)
-	defer w.Destroy()
-	w.SetTitle("Stock scraper")
-	w.SetSize(1280, 1024, webview.HintNone)
-	w.Navigate(addr)
-	w.Run()
+	ui, _ := lorca.New(addr, "", 1280, 1024)
+	defer ui.Close()
+	<-ui.Done()
 }
 
 func main() {

@@ -20,7 +20,7 @@ require (
 	github.com/sergi/go-diff v1.1.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/ugorji/go v1.2.1 // indirect
-	github.com/webview/webview v0.0.0-20200724072439-e0c01595b361
+	github.com/zserge/lorca v0.1.9
 	golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9 // indirect
 	golang.org/x/sys v0.0.0-20201211090839-8ad439b19e0f // indirect
 	google.golang.org/protobuf v1.25.0 // indirect

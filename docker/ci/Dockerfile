@@ -8,9 +8,7 @@ RUN apk update && \
     git \
     python3 \
     nodejs \
-    yarn \
-    webkit2gtk-dev \
-    gtk+3.0-dev
+    yarn
 
 RUN curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh
 
