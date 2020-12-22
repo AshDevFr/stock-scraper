@@ -14,6 +14,7 @@ var (
 	defaultOpenLinks     = false
 	defaultOpenAddToCart = false
 	defaultRunWeb        = false
+	defaultWebRetries    = 0
 	neweggRegex          = regexp.MustCompile(`(?i)newegg\.com`)
 	bestbuyRegex         = regexp.MustCompile(`(?i)bestbuy\.com`)
 	amazonRegex          = regexp.MustCompile(`(?i)amazon\.com`)
@@ -38,6 +39,8 @@ func ParseItem(defaultConfig types.ItemConfig, item types.Item) types.Item {
 	item.Config.ItemLinkSelector = ParseItemLinkSelector(defaultConfig, item)
 	item.Config.PriceSelector = ParsePriceSelector(defaultConfig, item)
 	item.Config.MaxPrice = ParseMaxPrice(defaultConfig, item)
+	item.Config.RunWeb = ParseRunWeb(defaultConfig, item)
+	item.Config.WebRetries = ParseWebRetries(defaultConfig, item)
 
 	return item.Parser.Parse(defaultConfig, item)
 }
@@ -128,6 +131,15 @@ func ParseRunWeb(defaultConfig types.ItemConfig, item types.Item) *bool {
 		return defaultConfig.RunWeb
 	}
 	return &defaultRunWeb
+}
+
+func ParseWebRetries(defaultConfig types.ItemConfig, item types.Item) *int {
+	if item.Config.WebRetries != nil {
+		return item.Config.WebRetries
+	} else if defaultConfig.WebRetries != nil {
+		return defaultConfig.WebRetries
+	}
+	return &defaultWebRetries
 }
 
 func ParseOpenAddToCart(defaultConfig types.ItemConfig, item types.Item) *bool {

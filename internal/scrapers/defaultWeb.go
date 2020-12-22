@@ -3,6 +3,7 @@ package scrapers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
 	log "github.com/sirupsen/logrus"
@@ -35,7 +36,7 @@ func RunWeb(item types.Item, checkContent func(string, []types.ParsedResults) (s
 	}
 	headers["User-Agent"] = item.Config.UserAgent
 
-	ctx, cancel := getBrowserCtx(true)
+	ctx, cancel := getBrowserCtx(!item.Config.NoHeadless)
 	defer cancel()
 
 	var body string
@@ -45,7 +46,18 @@ func RunWeb(item types.Item, checkContent func(string, []types.ParsedResults) (s
 			network.SetExtraHTTPHeaders(headers),
 			chromedp.Navigate(itemUrl),
 			chromedp.ActionFunc(func(ctx context.Context) error {
-				time.Sleep(time.Second * 1)
+				retries := *item.Config.WebRetries
+				for retries > 0 {
+					chromedp.JavascriptAttribute("html", "outerHTML", &body).Do(ctx)
+					_, err := checkContent(body, []types.ParsedResults{})
+					if err != nil {
+						logger.Warn(fmt.Sprintf("%s Waiting 5s...", err))
+						time.Sleep(time.Second * 5)
+					} else {
+						continue
+					}
+					retries--
+				}
 				return nil
 			}),
 			chromedp.OuterHTML("html", &body),

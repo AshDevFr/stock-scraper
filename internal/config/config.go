@@ -11,8 +11,10 @@ import (
 	"time"
 )
 
-var config types.Config
-var userAgents []string
+var (
+	config     types.Config
+	userAgents []string
+)
 
 func GetConfig() types.Config {
 	return config
