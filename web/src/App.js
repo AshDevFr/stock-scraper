@@ -2,10 +2,12 @@ import React, {useEffect} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import './App.css';
 import Header from "./components/Header.js";
-import Logs from "./components/Logs";
 
 import {fetchConfigAction} from "./actions/configSlice";
 import WebSocketProvider from "./components/WebSocketProvider";
+import Display from "./components/Display";
+import Footer from "./components/Footer";
+import Terminal from "./components/Terminal";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -20,7 +22,10 @@ const App = () => {
   return (
     <WebSocketProvider>
       <Header/>
-      <Logs/>
+      <Display/>
+      <Footer>
+        <Terminal/>
+      </Footer>
     </WebSocketProvider>
   );
 }

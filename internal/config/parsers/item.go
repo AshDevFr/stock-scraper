@@ -25,6 +25,8 @@ func ParseItem(defaultConfig types.ItemConfig, item types.Item) types.Item {
 	item.Uuid = genUuid(item)
 	item.TrackedUrl = item.Url
 	item.Parser = getParser(item)
+	item.Id = ParseId(item)
+	item.Type = ParseType(item)
 	item.Config.Cron = ParseCron(defaultConfig, item)
 	item.Config.UserAgent = ParseUserAgent(defaultConfig, item)
 	item.Config.Rules = ParseRules(defaultConfig, item)
@@ -33,6 +35,20 @@ func ParseItem(defaultConfig types.ItemConfig, item types.Item) types.Item {
 	item.Config.MaxPrice = ParseMaxPrice(defaultConfig, item)
 
 	return item.Parser.Parse(defaultConfig, item)
+}
+
+func ParseId(item types.Item) string {
+	if item.Id == "" {
+		return item.Parser.ParseId(item)
+	}
+	return item.Type
+}
+
+func ParseType(item types.Item) string {
+	if item.Type == "" {
+		return item.Parser.Label()
+	}
+	return item.Type
 }
 
 func ParsePriceSelector(defaultConfig types.ItemConfig, item types.Item) string {

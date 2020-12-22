@@ -30,6 +30,7 @@ type Price struct {
 
 type Parser interface {
 	Label() string
+	ParseId(Item) string
 	Parse(ItemConfig, Item) Item
 	Run(Item) (string, string, error)
 }

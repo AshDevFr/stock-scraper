@@ -1,7 +1,7 @@
 package types
 
 type WSUpdatePayload struct {
-	Time         int64
+	Time         int64  `json:"time"`
 	Type         string `json:"type"`
 	Scraper      string `json:"scraper"`
 	Item         Item   `json:"item"`
@@ -11,7 +11,7 @@ type WSUpdatePayload struct {
 }
 
 type WSActionPayload struct {
-	Time    int64
+	Time    int64  `json:"time"`
 	Type    string `json:"type"`
 	Action  string `json:"action"`
 	Item    Item   `json:"item"`

@@ -9,6 +9,14 @@ type DefaultParser struct {
 	label string
 }
 
+func (p *DefaultParser) ParseId(item types.Item) string {
+	if item.Id != "" {
+		return item.Id
+	}
+
+	return ""
+}
+
 func (p *DefaultParser) Label() string {
 	return p.label
 }

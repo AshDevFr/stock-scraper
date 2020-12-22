@@ -12,7 +12,14 @@ type BestBuyParser struct {
 	label string
 }
 
-func getBestBuyItemId(item types.Item) string {
+func (p *BestBuyParser) ParseId(item types.Item) string {
+	if item.Id != "" {
+		return item.Id
+	}
+	if item.Url == "" {
+		return ""
+	}
+
 	u, err := url.Parse(item.Url)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -44,14 +51,9 @@ func (p *BestBuyParser) Label() string {
 }
 
 func (p *BestBuyParser) Parse(defaultConfig types.ItemConfig, item types.Item) types.Item {
-	itemId := item.Id
-	if itemId == "" && item.Url != "" {
-		itemId = getBestBuyItemId(item)
-	}
-
-	if itemId != "" {
-		item.TrackedUrl = "https://api.bestbuy.com/click/-/" + itemId + "/pdp"
-		item.AddToCartUrl = "https://api.bestbuy.com/click/-/" + itemId + "/cart"
+	if item.Id != "" {
+		item.TrackedUrl = "https://api.bestbuy.com/click/-/" + item.Id + "/pdp"
+		item.AddToCartUrl = "https://api.bestbuy.com/click/-/" + item.Id + "/cart"
 	}
 
 	item.Config.Selectors = ParseSelectors(defaultConfig, item)

@@ -14,7 +14,14 @@ type NeweggParser struct {
 	label string
 }
 
-func getNeweggItemId(item types.Item) string {
+func (p *NeweggParser) ParseId(item types.Item) string {
+	if item.Id != "" {
+		return item.Id
+	}
+	if item.Url == "" {
+		return ""
+	}
+
 	u, err := url.Parse(item.Url)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -46,14 +53,9 @@ func (p *NeweggParser) Label() string {
 }
 
 func (p *NeweggParser) Parse(defaultConfig types.ItemConfig, item types.Item) types.Item {
-	itemId := item.Id
-	if itemId == "" && item.Url != "" {
-		itemId = getNeweggItemId(item)
-	}
-
-	if itemId != "" {
-		item.TrackedUrl = "https://www.newegg.com/Product/Product.aspx?Item=" + itemId
-		item.AddToCartUrl = "https://secure.newegg.com/Shopping/AddtoCart.aspx?Submit=ADD&ItemList=" + itemId
+	if item.Id != "" {
+		item.TrackedUrl = "https://www.newegg.com/Product/Product.aspx?Item=" + item.Id
+		item.AddToCartUrl = "https://secure.newegg.com/Shopping/AddtoCart.aspx?Submit=ADD&ItemList=" + item.Id
 	}
 
 	item.Config.Selectors = ParseSelectors(defaultConfig, item)

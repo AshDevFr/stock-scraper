@@ -12,7 +12,14 @@ type AmazonParser struct {
 	label string
 }
 
-func getAmazonItemId(item types.Item) string {
+func (p *AmazonParser) ParseId(item types.Item) string {
+	if item.Id != "" {
+		return item.Id
+	}
+	if item.Url == "" {
+		return ""
+	}
+
 	u, err := url.Parse(item.Url)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -37,14 +44,9 @@ func (p *AmazonParser) Label() string {
 }
 
 func (p *AmazonParser) Parse(defaultConfig types.ItemConfig, item types.Item) types.Item {
-	itemId := item.Id
-	if itemId == "" && item.Url != "" {
-		itemId = getAmazonItemId(item)
-	}
-
-	if itemId != "" {
-		item.TrackedUrl = "https://smile.amazon.com/dp/" + itemId
-		item.AddToCartUrl = "https://smile.amazon.com/gp/aws/cart/add-res.html?ASIN.1=" + itemId + "&Quantity.1=1"
+	if item.Id != "" {
+		item.TrackedUrl = "https://smile.amazon.com/dp/" + item.Id
+		item.AddToCartUrl = "https://smile.amazon.com/gp/aws/cart/add-res.html?ASIN.1=" + item.Id + "&Quantity.1=1"
 	}
 
 	item.Config.Selectors = ParseSelectors(defaultConfig, item)
