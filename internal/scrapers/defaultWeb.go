@@ -13,6 +13,13 @@ import (
 	"time"
 )
 
+type BrowserSession struct {
+	Context context.Context
+	Cancel  context.CancelFunc
+}
+
+var retryWaitingSec = 1
+
 func RunWeb(item types.Item, checkContent func(string, []types.ParsedResults) (string, error)) (types.Result, string, error) {
 	itemUrl := item.TrackedUrl
 	if itemUrl == "" {
@@ -36,11 +43,11 @@ func RunWeb(item types.Item, checkContent func(string, []types.ParsedResults) (s
 	}
 	headers["User-Agent"] = item.Config.UserAgent
 
-	ctx, cancel := getBrowserCtx(!item.Config.NoHeadless)
-	defer cancel()
+	browserSession := getBrowserCtx(item)
+	defer browserSession.Cancel()
 
 	var body string
-	err := chromedp.Run(ctx,
+	err := chromedp.Run(browserSession.Context,
 		chromedp.Tasks{
 			network.Enable(),
 			network.SetExtraHTTPHeaders(headers),
@@ -51,10 +58,10 @@ func RunWeb(item types.Item, checkContent func(string, []types.ParsedResults) (s
 					chromedp.JavascriptAttribute("html", "outerHTML", &body).Do(ctx)
 					_, err := checkContent(body, []types.ParsedResults{})
 					if err != nil {
-						logger.Warn(fmt.Sprintf("%s Waiting 5s...", err))
-						time.Sleep(time.Second * 5)
+						logger.Warn(fmt.Sprintf("%s Waiting %ds...", err, retryWaitingSec))
+						time.Sleep(time.Second * time.Duration(retryWaitingSec))
 					} else {
-						continue
+						return nil
 					}
 					retries--
 				}
@@ -72,11 +79,16 @@ func RunWeb(item types.Item, checkContent func(string, []types.ParsedResults) (s
 	return processReader(item, logger, ioutil.NopCloser(strings.NewReader(body)), checkContent)
 }
 
-func getBrowserCtx(headless bool) (context.Context, context.CancelFunc) {
-	if headless {
-		return chromedp.NewContext(context.Background())
+func getBrowserCtx(item types.Item) BrowserSession {
+	var ctx context.Context
+	var cancel context.CancelFunc
+	if !item.Config.NoHeadless {
+		ctx, cancel = chromedp.NewContext(context.Background())
+	} else {
+		opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Flag("headless", false))
+		actx, _ := chromedp.NewExecAllocator(context.Background(), opts...)
+		ctx, cancel = chromedp.NewContext(actx)
 	}
-	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Flag("headless", false))
-	actx, _ := chromedp.NewExecAllocator(context.Background(), opts...)
-	return chromedp.NewContext(actx)
+
+	return BrowserSession{Context: ctx, Cancel: cancel}
 }

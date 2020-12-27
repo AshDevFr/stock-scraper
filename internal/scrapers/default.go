@@ -170,6 +170,8 @@ func Run(item types.Item, checkContent types.CheckContentFunc) (types.Result, st
 		return types.Result{}, "", err
 	}
 
+	// Make sure we close the request to prevent EOF errors
+	req.Close = true
 	req.Header.Set("Accept", "text/html")
 	for k, v := range item.Config.Headers {
 		req.Header.Set(k, v)
