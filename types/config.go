@@ -13,8 +13,10 @@ type ItemConfig struct {
 	MaxPrice         *float64          `json:"maxPrice"`
 	PriceSelector    string            `json:"priceSelector"`
 	RunWeb           *bool             `json:"runWeb"`
+	InitWaitingSec   *int              `json:"initWaitingSec"`
 	NoHeadless       bool              `json:"noHeadless"`
 	WebRetries       *int              `json:"webRetries"`
+	ForceUrl         bool              `json:"forceUrl"`
 }
 
 type Rule struct {

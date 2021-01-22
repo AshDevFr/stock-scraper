@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"regexp"
 	"stock_scraper/internal/scrapers"
+	"stock_scraper/internal/utils"
 	"stock_scraper/types"
 )
 
@@ -39,16 +40,20 @@ func (p *AmazonParser) ParseId(item types.Item) string {
 	return ""
 }
 
-func (p *AmazonParser) ParseUrls(item types.Item) (string, string) {
+func (p *AmazonParser) ParseUrls(item types.Item, trackedUrl string) (string, string) {
 	itemId := item.Id
 	if itemId == "" {
 		itemId = p.ParseId(item)
 	}
 	if itemId == "" {
-		return item.Url, ""
+		return utils.CompleteUrl(item.Url, trackedUrl), ""
 	}
-	return "https://smile.amazon.com/dp/" + itemId,
-		"https://smile.amazon.com/gp/aws/cart/add-res.html?ASIN.1=" + itemId + "&Quantity.1=1"
+
+	addToCartUrl := "https://smile.amazon.com/gp/aws/cart/add-res.html?ASIN.1=" + itemId + "&Quantity.1=1"
+	if item.Config.ForceUrl {
+		return utils.CompleteUrl(item.Url, trackedUrl), addToCartUrl
+	}
+	return "https://smile.amazon.com/dp/" + itemId, addToCartUrl
 }
 
 func (p *AmazonParser) Label() string {
@@ -56,7 +61,7 @@ func (p *AmazonParser) Label() string {
 }
 
 func (p *AmazonParser) Parse(defaultConfig types.ItemConfig, item types.Item) types.Item {
-	item.TrackedUrl, item.AddToCartUrl = p.ParseUrls(item)
+	item.TrackedUrl, item.AddToCartUrl = p.ParseUrls(item, item.Url)
 
 	item.Config.Selectors = ParseSelectors(defaultConfig, item)
 	if len(item.Config.Selectors) == 0 {

@@ -9,19 +9,20 @@ import (
 )
 
 var (
-	defaultUserAgent     = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
-	defaultCron          = "@every 2 minutes"
-	defaultOpenLinks     = false
-	defaultOpenAddToCart = false
-	defaultRunWeb        = false
-	defaultWebRetries    = 0
-	neweggRegex          = regexp.MustCompile(`(?i)newegg\.com`)
-	bestbuyRegex         = regexp.MustCompile(`(?i)bestbuy\.com`)
-	amazonRegex          = regexp.MustCompile(`(?i)amazon\.com`)
-	defaultParser        = &DefaultParser{label: "default"}
-	amazonParser         = &AmazonParser{label: "amazon"}
-	bestbuyParser        = &BestBuyParser{label: "bestbuy"}
-	neweggParser         = &NeweggParser{label: "newegg"}
+	defaultUserAgent      = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+	defaultCron           = "@every 2 minutes"
+	defaultOpenLinks      = false
+	defaultOpenAddToCart  = false
+	defaultRunWeb         = false
+	defaultWebRetries     = 0
+	defaultInitWaitingSec = 0
+	neweggRegex           = regexp.MustCompile(`(?i)newegg\.com`)
+	bestbuyRegex          = regexp.MustCompile(`(?i)bestbuy\.com`)
+	amazonRegex           = regexp.MustCompile(`(?i)amazon\.com`)
+	defaultParser         = &DefaultParser{label: "default"}
+	amazonParser          = &AmazonParser{label: "amazon"}
+	bestbuyParser         = &BestBuyParser{label: "bestbuy"}
+	neweggParser          = &NeweggParser{label: "newegg"}
 )
 
 func ParseItem(defaultConfig types.ItemConfig, item types.Item) types.Item {
@@ -41,6 +42,7 @@ func ParseItem(defaultConfig types.ItemConfig, item types.Item) types.Item {
 	item.Config.MaxPrice = ParseMaxPrice(defaultConfig, item)
 	item.Config.RunWeb = ParseRunWeb(defaultConfig, item)
 	item.Config.WebRetries = ParseWebRetries(defaultConfig, item)
+	item.Config.InitWaitingSec = ParseInitWaitingSec(defaultConfig, item)
 
 	return item.Parser.Parse(defaultConfig, item)
 }
@@ -140,6 +142,15 @@ func ParseWebRetries(defaultConfig types.ItemConfig, item types.Item) *int {
 		return defaultConfig.WebRetries
 	}
 	return &defaultWebRetries
+}
+
+func ParseInitWaitingSec(defaultConfig types.ItemConfig, item types.Item) *int {
+	if item.Config.InitWaitingSec != nil {
+		return item.Config.InitWaitingSec
+	} else if defaultConfig.InitWaitingSec != nil {
+		return defaultConfig.InitWaitingSec
+	}
+	return &defaultInitWaitingSec
 }
 
 func ParseOpenAddToCart(defaultConfig types.ItemConfig, item types.Item) *bool {

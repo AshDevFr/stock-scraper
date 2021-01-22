@@ -2,6 +2,7 @@ package parsers
 
 import (
 	"stock_scraper/internal/scrapers"
+	"stock_scraper/internal/utils"
 	"stock_scraper/types"
 )
 
@@ -17,8 +18,8 @@ func (p *DefaultParser) ParseId(item types.Item) string {
 	return ""
 }
 
-func (p *DefaultParser) ParseUrls(item types.Item) (string, string) {
-	return item.Url, ""
+func (p *DefaultParser) ParseUrls(item types.Item, trackedUrl string) (string, string) {
+	return utils.CompleteUrl(item.Url, trackedUrl), ""
 }
 
 func (p *DefaultParser) Label() string {

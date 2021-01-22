@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"regexp"
 	"stock_scraper/internal/scrapers"
+	"stock_scraper/internal/utils"
 	"stock_scraper/types"
 	"strings"
 )
@@ -48,16 +49,20 @@ func (p *NeweggParser) ParseId(item types.Item) string {
 	return ""
 }
 
-func (p *NeweggParser) ParseUrls(item types.Item) (string, string) {
+func (p *NeweggParser) ParseUrls(item types.Item, trackedUrl string) (string, string) {
 	itemId := item.Id
 	if itemId == "" {
 		itemId = p.ParseId(item)
 	}
 	if itemId == "" {
-		return item.Url, ""
+		return utils.CompleteUrl(item.Url, trackedUrl), ""
 	}
-	return "https://www.newegg.com/Product/Product.aspx?Item=" + itemId,
-		"https://secure.newegg.com/Shopping/AddtoCart.aspx?Submit=ADD&ItemList=" + itemId
+
+	addToCartUrl := "https://secure.newegg.com/Shopping/AddtoCart.aspx?Submit=ADD&ItemList=" + itemId
+	if item.Config.ForceUrl {
+		return utils.CompleteUrl(item.Url, trackedUrl), addToCartUrl
+	}
+	return "https://www.newegg.com/Product/Product.aspx?Item=" + itemId, addToCartUrl
 }
 
 func (p *NeweggParser) Label() string {
@@ -65,7 +70,7 @@ func (p *NeweggParser) Label() string {
 }
 
 func (p *NeweggParser) Parse(defaultConfig types.ItemConfig, item types.Item) types.Item {
-	item.TrackedUrl, item.AddToCartUrl = p.ParseUrls(item)
+	item.TrackedUrl, item.AddToCartUrl = p.ParseUrls(item, item.Url)
 
 	item.Config.Selectors = ParseSelectors(defaultConfig, item)
 	if len(item.Config.Selectors) == 0 {

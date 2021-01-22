@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"regexp"
 	"stock_scraper/internal/scrapers"
+	"stock_scraper/internal/utils"
 	"stock_scraper/types"
 )
 
@@ -46,16 +47,20 @@ func (p *BestBuyParser) ParseId(item types.Item) string {
 	return ""
 }
 
-func (p *BestBuyParser) ParseUrls(item types.Item) (string, string) {
+func (p *BestBuyParser) ParseUrls(item types.Item, trackedUrl string) (string, string) {
 	itemId := item.Id
 	if itemId == "" {
 		itemId = p.ParseId(item)
 	}
 	if itemId == "" {
-		return item.Url, ""
+		return utils.CompleteUrl(item.Url, trackedUrl), ""
 	}
-	return "https://api.bestbuy.com/click/-/" + itemId + "/pdp",
-		"https://api.bestbuy.com/click/-/" + itemId + "/cart"
+
+	addToCartUrl := "https://api.bestbuy.com/click/-/" + itemId + "/cart"
+	if item.Config.ForceUrl {
+		return utils.CompleteUrl(item.Url, trackedUrl), addToCartUrl
+	}
+	return "https://api.bestbuy.com/click/-/" + itemId + "/pdp", addToCartUrl
 }
 
 func (p *BestBuyParser) Label() string {
@@ -63,7 +68,7 @@ func (p *BestBuyParser) Label() string {
 }
 
 func (p *BestBuyParser) Parse(defaultConfig types.ItemConfig, item types.Item) types.Item {
-	item.TrackedUrl, item.AddToCartUrl = p.ParseUrls(item)
+	item.TrackedUrl, item.AddToCartUrl = p.ParseUrls(item, item.Url)
 
 	item.Config.Selectors = ParseSelectors(defaultConfig, item)
 	if len(item.Config.Selectors) == 0 {

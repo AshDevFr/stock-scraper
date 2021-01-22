@@ -5,6 +5,7 @@ import (
 	"github.com/sergi/go-diff/diffmatchpatch"
 	log "github.com/sirupsen/logrus"
 	"regexp"
+	"stock_scraper/internal/utils"
 	"stock_scraper/types"
 	"strings"
 )
@@ -52,8 +53,8 @@ func applyRule(rule types.Rule, text string) *types.Action {
 
 func applyRuleToContent(rule types.Rule, previousContent string, newContent string) *types.Action {
 	addedTexts, removedTexts := diff(previousContent, newContent)
-	addedText := strings.Join(addedTexts, "")
-	removedText := strings.Join(removedTexts, "")
+	addedText := strings.Join(utils.Map(addedTexts, strings.TrimSpace), "")
+	removedText := strings.Join(utils.Map(removedTexts, strings.TrimSpace), "")
 
 	var action *types.Action
 	switch rule.Condition {
@@ -67,6 +68,9 @@ func applyRuleToContent(rule types.Rule, previousContent string, newContent stri
 		action = applyRule(rule, removedText)
 	case "text":
 		action = applyRule(rule, newContent)
+	}
+	if action != nil {
+		action.Diff = types.Diff{AddedText: addedText, RemovedText: removedText}
 	}
 	return action
 }

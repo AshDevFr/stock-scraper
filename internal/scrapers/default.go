@@ -42,7 +42,7 @@ func processDoc(item types.Item, reader io.ReadCloser) ([]types.ParsedResults, s
 			selection := s.Find(item.Config.ItemLinkSelector)
 			url, exists := selection.Attr("href")
 			if exists && url != "" {
-				trackedUrl, addToCartUrl := item.Parser.ParseUrls(types.Item{Url: url})
+				trackedUrl, addToCartUrl := item.Parser.ParseUrls(types.Item{Url: url}, item.TrackedUrl)
 				result.ItemLink = &trackedUrl
 				result.ItemAddToCartLink = &addToCartUrl
 			}

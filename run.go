@@ -37,8 +37,10 @@ func runScraper(item types.Item) {
 					for _, action := range actions {
 						if *item.Config.OpenAddToCart && action.AddToCartLink != "" {
 							browser.Open(action.AddToCartLink)
-						} else if action.AddToCartLink != "" {
+						} else if *item.Config.OpenAddToCart && action.AddToCartLink != "" {
 							browser.Open(action.AddToCartLink)
+						} else if action.Link != "" {
+							browser.Open(action.Link)
 						} else {
 							browser.Open(item.Url)
 						}
@@ -47,6 +49,12 @@ func runScraper(item types.Item) {
 				log.Info("Opening link")
 			}
 			for _, action := range actions {
+				log.WithFields(log.Fields{
+					"url":         item.TrackedUrl,
+					"selectors":   item.Config.Selectors,
+					"addedText":   action.Diff.AddedText,
+					"removedText": action.Diff.RemovedText,
+				}).Debug("Action triggered")
 				websocket.SendActionMessage(action, item)
 			}
 		}
