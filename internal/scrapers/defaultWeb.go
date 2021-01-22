@@ -53,6 +53,7 @@ func RunWeb(item types.Item, checkContent func(string, []types.ParsedResults) (s
 			network.SetExtraHTTPHeaders(headers),
 			chromedp.Navigate(itemUrl),
 			chromedp.ActionFunc(func(ctx context.Context) error {
+				logger.Debug(fmt.Sprintf("Waiting %ds for initial loading...", *item.Config.InitWaitingSec))
 				time.Sleep(time.Second * time.Duration(*item.Config.InitWaitingSec))
 				retries := *item.Config.WebRetries
 				for retries > 0 {
