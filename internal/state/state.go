@@ -6,9 +6,12 @@ import (
 	"time"
 )
 
-var once sync.Once
-var alertsMutex = &sync.Mutex{}
-var contentsMutex = &sync.Mutex{}
+var (
+	once          sync.Once
+	contentsMutex = &sync.Mutex{}
+	alertsMutex   = &sync.Mutex{}
+	alertInterval = 5
+)
 
 type State struct {
 	alerts   map[string]*time.Time
@@ -39,7 +42,7 @@ func ShouldRunAlert(uuid string, callback func()) {
 	alertsMutex.Unlock()
 
 	if lastAlert != nil {
-		nextAlert := lastAlert.Add(time.Minute * 3)
+		nextAlert := lastAlert.Add(time.Minute * time.Duration(alertInterval))
 
 		if nextAlert.After(time.Now()) {
 			return
